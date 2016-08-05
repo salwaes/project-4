@@ -1,6 +1,6 @@
 # NewSca (Ns)
 
-![Good or bad news] (http://s23.photobucket.com/user/chaosbria/media/GIF/RHMITbadnewsgoodway_zps2807c8ec.gif.html)
+![Good or bad news] (http://i23.photobucket.com/albums/b382/chaosbria/GIF/RHMITbadnewsgoodway_zps2807c8ec.gif)
 
 ##### The news scale is an app to get all sort of news which have a sentiment score depending on their positivity or negativity. After each session the scale norrows down to the side that seems to interest more their respective user. So do you want the good news or the bad news first ? 
 
