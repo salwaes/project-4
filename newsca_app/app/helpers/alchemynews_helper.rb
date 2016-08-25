@@ -1,0 +1,2 @@
+module AlchemynewsHelper
+end

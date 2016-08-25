@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NewSca</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all' %>
+    <%= javascript_include_tag 'application' %>
+  </head>
+
+  <body>
+
+    <% if user_signed_in? %>
+      <%= link_to('<button class="button-primary u-pull-right logout">Logout</button>'.html_safe, destroy_user_session_path, :method => :delete)%>
+    <% else %>
+      <%= link_to '<button class="button-primary u-pull-right signun">Sign Up</button>'.html_safe, new_user_registration_path %>
+      <%= link_to '<button class="button-primary u-pull-right login">Login</button>'.html_safe, new_user_session_path %>
+    <% end %>
+
+    <p class="notice"><%= notice %></p>
+    <p class="alert"><%= alert %></p>
+
+    <%= yield %>
+  </body>
+</html>

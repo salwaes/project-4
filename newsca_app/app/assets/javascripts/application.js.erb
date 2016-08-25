@@ -1,0 +1,210 @@
+// This is a manifest file that'll be compiled into application.js, which will include all the files
+// listed below.
+//
+// Any JavaScript/Coffee file within this directory, lib/assets/javascripts, vendor/assets/javascripts,
+// or any plugin's vendor/assets/javascripts directory can be referenced here using a relative path.
+//
+// It's not advisable to add code directly here, but if you do, it'll appear at the bottom of the
+// compiled file. JavaScript code in this file should be added after the last require_* statement.
+//
+// Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
+// about supported directives.
+//
+//= require jquery
+//= require jquery_ujs
+//= require_tree .
+
+
+// var newSca = {
+//   user : false,
+//   ns : [0,0],
+//   nsSlider : [0,0],
+//   start : 'now-'30'm',
+//   end: 'now',
+//   query: ''
+// }
+
+$(document).ready(function() {
+
+  function getNews() {
+    var $news = $('.newsList');
+    $news.empty();
+    $.getJSON('/alchemynews').done(function(data) {
+      console.log(data)
+      data.result.docs.forEach(function(news) {
+        console.log(news);
+        renderNews(news)
+      })
+    })
+  }
+
+  function renderNews(news) {
+    var $news = $('.newsList');
+    var $article = $('<li class="article">');
+    var $title = $('<h5>');
+    var $text = $('<p>');
+    $text.text(news.source.enriched.url.text);
+    $title.text(news.source.enriched.url.title);
+    var $img = $('<img class="imgs">').attr('src', news.source.enriched.url.image);
+    // var $author = $('<h6>');
+    // $author.text('By ' + news.source.enriched.url.author);
+    var $link = $('<a target="_blank" href="' + news.source.enriched.url.url + '"><button class="button-primary fullArticle">Full article</button>');
+    var $hideBtn = $('<button class="button-primary hideBtn">Hide</button>');
+    var $scrollBtn = $('<button class="button-primary scrollBtn">Scroll Down</button>');
+    var $docSent = $('<p class="docSent">');
+    $docSent.text(news.source.enriched.url.docSentiment.score);
+
+
+    $article.append($title);
+    $article.append($text);
+    $article.append($img);
+    // $article.append($author);
+    $article.append($docSent);
+    $article.append($link);
+    $article.append($hideBtn);
+    $news.append($article);
+    $news.append($scrollBtn);
+  }
+
+
+// get news-scale depending on slider values
+  function getNS() {
+    console.log('clicked');
+    a= $('.positive').val();
+    b= $('.negative').val();
+    getScore(a,b);
+  }
+  $('.newNS').click(getNS);
+// change slider values by hide or fullArticle clicked
+  function changeNsFull(e) {
+    console.log('clicked');
+    var a = parseInt( $(e.target).closest('.docSent').text() );
+    if ( a > 0 ) {
+      $('.positive').val() = $('.positive').val() + 0.1
+    } else {
+      $('.negative').val() = $('.positive').val() + 0.1
+    }
+    getNS();
+  }
+  $('.fullArticle').click(changeNsFull);
+
+  function changeNsHide(e) {
+    console.log('clicked');
+    var $articleToHide = $(e.target).parent();
+    console.log($articleToHide);
+    var a = parseInt( $(e.target).closest('.docSent').text() );
+    console.log(a);
+    if ( a > 0 ) {
+      $('.positive').val() = $('.positive').val() - 0.1
+    } else {
+      $('.negative').val() = $('.positive').val() - 0.1
+    }
+    getNS();
+    $articleToHide.empty();
+  }
+  $('.hideBtn').click(changeNsHide);
+
+  // set query by ns value
+  function getScore(a,b) {
+    // var ns = [a,b];
+    if( a==1 && b==-1) {
+      score = '&';
+    } else if( a==0 ) {
+      score = 'q.enriched.url.docSentiment=|score=>' + b + '|';
+    } else if ( b==0 ) {
+      score = 'q.enriched.url.docSentiment=|score=<' + a + '|';
+    } else {
+      score = 'q.enriched.url.docSentiment=|score=>' + b + '|' + '&q.enriched.url.docSentiment=|type=positive,score=<' + a + '|';
+
+    }
+  }
+
+  // function getUserScore() {
+  //   $.get('/users', data).done( (response) => {
+  //   console.log(response);
+
+  // }
+
+// get articles and render them by api call depending on who signed in
+  function getUserNews() {
+    if ( $('.logout').length > 0 ) {
+      getUserNS();
+      function getUserNS() {
+        var $news = $('.newsList');
+        $news.empty();
+        getNS();
+        console.log(score);
+        $.getJSON('http://gateway-a.watsonplatform.net/calls/data/GetNews?apikey=key&outputMode=json&start=now-30m&end=now&count=6&'+ score +'&return=enriched.url.docSentiment,enriched.url.image,enriched.url.taxonomy,enriched.url.text,enriched.url.title,enriched.url.url').done(function(data) {
+          console.log(data)
+          data.result.docs.forEach(function(news) {
+            console.log(news);
+            renderNews(news)
+          })
+        })
+      }
+    } else {
+      getNews();
+    }
+  }
+  getUserNews();
+
+// render api call by category selected
+  function getCategory(e) {
+    var cat = $(e.target).attr("id");
+    console.log(cat);
+    if (cat === 'all') {
+      getUserNews();
+    } else {
+      getCat();
+    };
+    function getCat() {
+      var $news = $('.newsList');
+      $news.empty();
+      getNS();
+      console.log(score);
+      query = 'q.enriched.url.taxonomy.taxonomy_.label=' + cat + '&';
+      $.getJSON('http://gateway-a.watsonplatform.net/calls/data/GetNews?apikey=key&outputMode=json&start=now-30m&end=now&count=6&'+ query + score +'&return=enriched.url.docSentiment,enriched.url.image,enriched.url.taxonomy,enriched.url.text,enriched.url.title,enriched.url.url').done(function(data) {
+        console.log(data)
+        data.result.docs.forEach(function(news) {
+          console.log(news);
+          renderNews(news)
+        })
+      })
+    }
+
+  }
+  $('.cat').click(getCategory);
+
+// render api call by keyword entered
+function search(e) {
+    console.log('clicked');
+    e.preventDefault();
+    var searchBar = $('.searchBar').val();
+    console.log(searchBar)
+    getSearch();
+    function getSearch() {
+      var $news = $('.newsList');
+      $news.empty();
+      getNS();
+      console.log(score);
+      query = 'q.enriched.url.enrichedTitle.keywords.keyword.text=' + searchBar + '&';
+      $.getJSON('http://gateway-a.watsonplatform.net/calls/data/GetNews?apikey=key&outputMode=json&start=now-30m&end=now&count=6&'+ query + score +'&return=enriched.url.docSentiment,enriched.url.image,enriched.url.text,enriched.url.title,enriched.url.url').done(function(data) {
+        console.log(data)
+        data.result.docs.forEach(function(news) {
+          console.log(news);
+          renderNews(news)
+        })
+      })
+    }
+  }
+  $('.search').submit(search);
+
+// get 10 more articles and add them to newslist after checking any changement in the news-scale
+  function scrollDown() {
+
+  }
+  // $('.scrollBtn').click(scrollDown);
+
+
+})
+
